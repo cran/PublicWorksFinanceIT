@@ -13,8 +13,8 @@ Dataset collecting data about soil defense public works in the Molise region ret
     \item{\code{LocalProjectCode}}{a character vector}
     \item{\code{CUP}}{a character vector}
     \item{\code{Intervention}}{a character vector}
-    \item{\code{ExecutiveDesignStartingDate}}{a character vector}
-    \item{\code{ExecutiveDesignEndingDate}}{a character vector}
+    \item{\code{EffectiveDesignStartingDate}}{a character vector}
+    \item{\code{EffectiveDesignEndingDate}}{a character vector}
     \item{\code{WorksExecutionStartingDate}}{a character vector}
     \item{\code{WorksExecutionEndingDate}}{a character vector}
     \item{\code{ConclusionStartingDate}}{a character vector}

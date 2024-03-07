@@ -7,7 +7,7 @@ Soil Defense Public works for the Umbria Region}
 Dataset collecting data about soil defense public works in the Umbria region retrieved from the Open Coesione repository. Data are georeferenced with point coordinates.}
 \usage{data("OCpoint")}
 \format{
-  A data frame with 82 observations on the following 42 variables.
+  A data frame with 82 observations on the following 44 variables.
   \describe{
     \item{\code{LocalProjectCode}}{a character vector}
     \item{\code{CUP}}{a character vector}
@@ -38,18 +38,20 @@ Dataset collecting data about soil defense public works in the Umbria region ret
     \item{\code{PrivateFunding}}{a numeric vector}
     \item{\code{TotalPublicFunding}}{a numeric vector}
     \item{\code{TotalFunding}}{a numeric vector}
-    \item{\code{FeasibilityStudyStartingDate}}{a numeric vector}
-    \item{\code{FeasibilityStudyEndingDate}}{a numeric vector}
-    \item{\code{PreliminaryDesignStartingDate}}{a numeric vector}
-    \item{\code{PreliminaryDesignEndingDate}}{a numeric vector}
-    \item{\code{DefinitiveDesignStartingDate}}{a numeric vector}
-    \item{\code{DefinitiveDesignEndingDate}}{a numeric vector}
-    \item{\code{ExecutiveDesignStartingDate}}{a numeric vector}
-    \item{\code{ExecutiveDesignEndingDate}}{a numeric vector}
-    \item{\code{WorksExecutionStartingDate}}{a numeric vector}
-    \item{\code{WorksExecutionEndingDate}}{a numeric vector}
-    \item{\code{ConclusionStartingDate}}{a numeric vector}
-    \item{\code{ConclusionEndingDate}}{a numeric vector}
+    \item{\code{FeasibilityStudyStartingDate}}{a character vector}
+    \item{\code{FeasibilityStudyEndingDate}}{a character vector}
+    \item{\code{PreliminaryDesignStartingDate}}{a character vector}
+    \item{\code{PreliminaryDesignEndingDate}}{a character vector}
+    \item{\code{DefinitiveDesignStartingDate}}{a character vector}
+    \item{\code{DefinitiveDesignEndingDate}}{a character vector}
+    \item{\code{ExecutiveDesignStartingDate}}{a character vector}
+    \item{\code{ExecutiveDesignEndingDate}}{a character vector}
+    \item{\code{EffectiveDesignStartingDate}}{a character vector}
+    \item{\code{EffectiveDesignEndingDate}}{a character vector}
+    \item{\code{WorksExecutionStartingDate}}{a character vector}
+    \item{\code{WorksExecutionEndingDate}}{a character vector}
+    \item{\code{ConclusionStartingDate}}{a character vector}
+    \item{\code{ConclusionEndingDate}}{a character vector}
     \item{\code{geom}}{a character vector}
   }
 }

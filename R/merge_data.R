@@ -68,16 +68,16 @@
 
 merge_data <- function(data_RENDIS, data_OBDAP, data_OC) {
   # Rename columns and add the column 'Source'
-  if(length(data_RENDIS) == 24){
-    data_RENDIS <- data_RENDIS %>% dplyr::mutate("Operability" = NA) %>% dplyr::select(1:23, 25, dplyr::everything() )
+  if(length(data_RENDIS) == 26){
+    data_RENDIS <- data_RENDIS %>% dplyr::mutate("Operability" = NA) %>% dplyr::select(1:25, 27, dplyr::everything() )
   }
   data_RENDIS <- data_RENDIS %>%
     dplyr::mutate(Source = "Rendis") %>%
     dplyr::select(-.data$Type)
 
   data_OBDAP <- data_OBDAP %>%
-    dplyr::mutate(Finance = rowSums(data_OBDAP[, 11:15])) %>%
-    dplyr::mutate(Source = "OpenBDAP", 'FeasibilityStudyStartingDate' = NA, 'FeasibilityStudyEndingDate' = NA, 'PreliminaryDesignStartingDate' = NA, 'PreliminaryDesignEndingDate' = NA, 'DefinitiveDesignStartingDate' = NA, "DefinitiveDesignEndingDate" = NA, 'InterventionClosed' =NA)
+    dplyr::mutate(Finance = rowSums(data_OBDAP[, 11:15], na.rm = T)) %>%
+    dplyr::mutate(Source = "OpenBDAP", 'FeasibilityStudyStartingDate' = NA, 'FeasibilityStudyEndingDate' = NA, 'PreliminaryDesignStartingDate' = NA, 'PreliminaryDesignEndingDate' = NA, 'DefinitiveDesignStartingDate' = NA,  "DefinitiveDesignEndingDate" = NA, 'ExecutiveDesignStartingDate' = NA,  "ExecutiveDesignEndingDate" = NA,'InterventionClosed' =NA)
 
 
   data_OC <- data_OC %>% dplyr::mutate('StateFunding' = rowSums(data_OC[,16:20], na.rm = T),  'LocalAuthoritiesFunding' = rowSums(data_OC[,21:23], na.rm=T), 'OtherFunding' = rowSums(data_OC[,24:26], na.rm =T))
@@ -88,13 +88,16 @@ merge_data <- function(data_RENDIS, data_OBDAP, data_OC) {
 
   # Select columns
   data_OC <- data_OC %>% dplyr::select(colnames(data_RENDIS), colnames(data_OBDAP[11:15]))
-  data_OC <- data_OC %>% dplyr::mutate(dplyr::across(c(8:21), as.character))
+  #data_OC <- data_OC %>% dplyr::mutate(dplyr::across(c(8:21), as.character))
   data_OBDAP <- data_OBDAP %>% dplyr::select(colnames(data_RENDIS), colnames(data_OBDAP[11:15]))
+  #data_OC$Finance <- as.numeric(data_OC$Finance)
 
   # Merge
   merged_data <- dplyr::bind_rows(data_OC, data_OBDAP, data_RENDIS)
+
   # Eliminate duplicated CUP
-  merged_data_unique <- merged_data[!duplicated(merged_data[, c('CUP', 'Finance')], fromLast = TRUE), ]
-  merged_data_unique <- merged_data_unique %>% dplyr::select(1:2,10:23,2, 26:30,dplyr::everything())
+  merged_data_unique <- merged_data %>%  dplyr::distinct(dplyr::across(c(.data$CUP,.data$Finance)), .keep_all = TRUE)
+  #%>% dplyr::ungroup()
+  merged_data_unique <- merged_data_unique %>% dplyr::select(1,2,4:25,28:32,3, dplyr::everything())
   return(merged_data_unique)
 }

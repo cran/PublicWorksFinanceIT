@@ -81,12 +81,13 @@ get_info_OC <- function(info) {
           }
           return(region_code)
         })%>%
-        grep("^[A-Z]{3}$|^[A-Z]{2}_[A-Z]{2}$", .data, value = TRUE)
+       as.character(na.rm = T)
     }else {
       data <- page %>%
         rvest::html_nodes("div#progetti_tema_section table.table tr td a.download") %>%
-        rvest::html_attr("href") %>%
-        sub('.*/progetti_esteso_(\\w+)\\.zip.*', '\\1', .data)
+        rvest::html_attr("href")
+
+      data <- sub(".*/progetti_esteso_(.*?)\\.zip", "\\1", data)
       data <- grep("^[^/]", data, value = TRUE)
     }
 

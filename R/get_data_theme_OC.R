@@ -77,7 +77,8 @@
 #'
 #'@author Lorena Ricciotti
 #'
-#'@examples data <- get_data_theme_OC("AMBIENTE", start = "2022-01-01", end = "2022-12-31")
+#'@examples
+#'\donttest{data <- get_data_theme_OC("AMBIENTE", start = "2022-01-01", end = "2022-12-31")}
 # #Retrieving data for one theme project
 # filtering for the starting and ending dates
 #'
@@ -246,17 +247,21 @@ if(!is.null(cod_reg)){
     df <- df[!is.na(df$geom),]
 
   }
+  #Handling Dates
+
+  df <- df %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate(EffectiveDesignStartingDate = ifelse(all(is.na(c(.data$DATA_INIZIO_EFF_STUDIO_FATT, .data$DATA_INIZIO_EFF_PROG_PREL, .data$DATA_INIZIO_EFF_PROG_DEF, .data$DATA_INIZIO_EFF_PROG_ESEC))), NA, pmin(.data$DATA_INIZIO_EFF_STUDIO_FATT, .data$DATA_INIZIO_EFF_PROG_PREL, .data$DATA_INIZIO_EFF_PROG_DEF, .data$DATA_INIZIO_EFF_PROG_ESEC, na.rm = TRUE))) %>%
+    dplyr::mutate(EffectiveDesignEndingDate = ifelse(all(is.na(c(.data$DATA_FINE_EFF_STUDIO_FATT,.data$DATA_FINE_EFF_PROG_PREL, .data$DATA_FINE_EFF_PROG_DEF, .data$DATA_FINE_EFF_PROG_ESEC))), NA, pmax(.data$DATA_FINE_EFF_STUDIO_FATT,.data$DATA_FINE_EFF_PROG_PREL, .data$DATA_FINE_EFF_PROG_DEF, .data$DATA_FINE_EFF_PROG_ESEC, na.rm = TRUE)))
+
   if (!is.null(start)) {
-
-    df <- df %>% dplyr::filter(.data$OC_DATA_INIZIO_PROGETTO >= start)
-
-
+    df <- df %>%
+      dplyr::filter(.data$EffectiveDesignStartingDate >= start)
   }
 
   if (!is.null(end)) {
-
-    df <- df %>% dplyr::filter(.data$OC_DATA_FINE_PROGETTO_EFFETTIVA <= end)
-
+    df <- df %>%
+      dplyr::filter(.data$EffectiveDesignEndingDate <= end)
 
   }
 
@@ -313,8 +318,16 @@ if(!is.null(cod_reg)){
     df <- df %>% dplyr::filter(.data$CUP_DESCR_SOTTOSETTORE == "DIFESA DEL SUOLO")
 
   }
-   df <- df[,-c(3,5:45,52:54,73,75:100,102:113,115,117,119,121,123,125,127,129:137,139,141,143,145:199)]
+  df$OC_SINTESI_PROGETTO[df$OC_SINTESI_PROGETTO == " "] <- df$OC_TITOLO_PROGETTO[which(df$OC_SINTESI_PROGETTO == " ")]
+  df <- df[,-c(3,5:45,52:54,73,75:100,102:113,115,117,119,121,123,125,127,129:137,139,141,143,145:199)]
    colnames(df)[1:41] <- c("LocalProjectCode", "CUP", "Intervention","COD_REGION", "DEN_REGION","COD_PROVINCE","DEN_PROVINCE","COD_MUNICIPALITY","DEN_MUNICIPALITY", "EuFunding", "FESR_EuFunding","FSE_EuFunding", "FEASR_EuFunding", "FEAMP_EuFunding", "IOG_EuFunding", "FondoDiRotazioneITA", "FSC_FundingITA", "PAC_FundingITA","CompletamentiFundingITA", "OtherMeasuresFundingITA", "RegionFunding", "ProvinceFunding", "MunicipalityFunding", "ReleasedResources", "OtherPublicFunding", "ForeignStateFunding","PrivateFunding", "TotalPublicFunding", "TotalFunding", "FeasibilityStudyStartingDate", "FeasibilityStudyEndingDate", "PreliminaryDesignStartingDate", "PreliminaryDesignEndingDate", "DefinitiveDesignStartingDate", "DefinitiveDesignEndingDate", "ExecutiveDesignStartingDate", "ExecutiveDesignEndingDate", "WorksExecutionStartingDate", "WorksExecutionEndingDate", "ConclusionStartingDate", "ConclusionEndingDate")
+   if(length(df) == 44){
+     df <- df %>% dplyr::select(1:37, 43:44, dplyr::everything()) %>% dplyr::mutate(dplyr::across(30:43, ~lubridate::ymd(.)))  %>% dplyr::mutate(dplyr::across(30:43 , ~as.character(.)))
+   }else{
+     df <- df %>% dplyr::select(1:37, 42:43, dplyr::everything()) %>% dplyr::mutate(dplyr::across(30:43, ~lubridate::ymd(.)))  %>% dplyr::mutate(dplyr::across(30:43 , ~as.character(.)))
+   }
+
+
   return(df)
 
 }

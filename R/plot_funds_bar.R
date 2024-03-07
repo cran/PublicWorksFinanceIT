@@ -35,7 +35,7 @@ plot_funds_bar <- function(data, var_col) {
   # Barplot
   bar_plot <- ggplot2::ggplot(data = sum_funds, ggplot2::aes(x = stats::reorder(.data$Fonte, -.data$`Ammontare Speso`), y = .data$`Ammontare Speso`)) +
     ggplot2::geom_bar(stat = "identity", ggplot2::aes(fill = .data$Fonte), width = 0.7) +
-    ggplot2::labs(fill = "Resources", title = "Total Amount for each Financial Resource", x = "Financial Resources", y = "Total Amount") +
+    ggplot2::labs(fill = "Resources", title = "Total Amount \n for each Financial Resource", x = "Financial Resources", y = "Total Amount (mln)") +
     ggplot2::scale_fill_viridis_d()+
     ggplot2::scale_y_continuous(labels = scales::number_format(scale = 1e-6)) +
     ggplot2::theme_classic() +

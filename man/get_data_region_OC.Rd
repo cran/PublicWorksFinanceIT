@@ -87,6 +87,8 @@ Legislative process main steps:
 \item{Definitive Design Ending Date (\code{character})}
 \item{Executive Design Starting Date (\code{character})}
 \item{Executive Design Ending Date (\code{character})}
+\item{Effective Design Starting Date (\code{character})}
+\item{Effective Design Ending Date (\code{character})}
 \item{Works Execution Starting Date (\code{character})}
 \item{Works Execution Ending Date (\code{character})}
 \item{Conclusion Starting Date (\code{character})}
@@ -97,8 +99,8 @@ Legislative process main steps:
 The \code{get_data_region_OC} function retrieves data from one or more Italian regions using associated region codes. It offers filtering options based on project start/end dates, province, and municipality codes. Additionally, it provides geospatial references.
 }
 \examples{
- dati_VDA <- get_data_region_OC("VDA", cod_mun = "002")
- # #Retrieving data for the municipality with code 002 in the Valle d'Aosta region.
+ dati_VDA <- get_data_region_OC("VDA", cod_mun = "007002")
+ # #Retrieving data for the municipality with code 007002 in the Valle d'Aosta region.
 }
 \references{
 \href{https://opencoesione.gov.it/en/dati/}{Open Coesione}

@@ -64,6 +64,8 @@
 #'  \item{Definitive Design Ending Date (\code{character})}
 #'  \item{Executive Design Starting Date (\code{character})}
 #'  \item{Executive Design Ending Date (\code{character})}
+#'  \item{Effective Design Starting Date (\code{character})}
+#'  \item{Effective Design Ending Date (\code{character})}
 #'  \item{Works Execution Starting Date (\code{character})}
 #'  \item{Works Execution Ending Date (\code{character})}
 #'  \item{Conclusion Starting Date (\code{character})}
@@ -75,8 +77,8 @@
 #'@author Lorena Ricciotti
 #'
 #'@examples
-#'  dati_VDA <- get_data_region_OC("VDA", cod_mun = "002")
-#'  # #Retrieving data for the municipality with code 002 in the Valle d'Aosta region.
+#'  dati_VDA <- get_data_region_OC("VDA", cod_mun = "007002")
+#'  # #Retrieving data for the municipality with code 007002 in the Valle d'Aosta region.
 #' @export
 #'
 get_data_region_OC <- function(cod_reg, cod_prov = NULL, cod_mun = NULL,  start = NULL, end = NULL, geo_ref = NULL, soil_defense = FALSE, verbose = TRUE) {
@@ -214,15 +216,21 @@ get_data_region_OC <- function(cod_reg, cod_prov = NULL, cod_mun = NULL,  start 
 
   }
 
+#Handling Dates
+
+  df <- df %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate(EffectiveDesignStartingDate = ifelse(all(is.na(c(.data$DATA_INIZIO_EFF_STUDIO_FATT, .data$DATA_INIZIO_EFF_PROG_PREL, .data$DATA_INIZIO_EFF_PROG_DEF, .data$DATA_INIZIO_EFF_PROG_ESEC))), NA, pmin(.data$DATA_INIZIO_EFF_STUDIO_FATT, .data$DATA_INIZIO_EFF_PROG_PREL, .data$DATA_INIZIO_EFF_PROG_DEF, .data$DATA_INIZIO_EFF_PROG_ESEC, na.rm = TRUE))) %>%
+    dplyr::mutate(EffectiveDesignEndingDate = ifelse(all(is.na(c(.data$DATA_FINE_EFF_STUDIO_FATT,.data$DATA_FINE_EFF_PROG_PREL, .data$DATA_FINE_EFF_PROG_DEF, .data$DATA_FINE_EFF_PROG_ESEC))), NA, pmax(.data$DATA_FINE_EFF_STUDIO_FATT,.data$DATA_FINE_EFF_PROG_PREL, .data$DATA_FINE_EFF_PROG_DEF, .data$DATA_FINE_EFF_PROG_ESEC, na.rm = TRUE))) %>% dplyr::ungroup() %>% as.data.frame()
 
   if (!is.null(start)) {
-    df <- df %>% dplyr::filter(.data$DATA_INIZIO_EFF_PROG_DEF >= start)
-
-
+    df <- df %>%
+         dplyr::filter(.data$EffectiveDesignStartingDate >= start)
   }
 
   if (!is.null(end)) {
-    df <- df %>% dplyr::filter(.data$DATA_FINE_EFF_PROG_ESEC <= end)
+    df <- df %>%
+      dplyr::filter(.data$EffectiveDesignEndingDate <= end)
 
   }
 
@@ -261,8 +269,15 @@ get_data_region_OC <- function(cod_reg, cod_prov = NULL, cod_mun = NULL,  start 
     df <- df %>% dplyr::filter(.data$CUP_DESCR_SOTTOSETTORE == "DIFESA DEL SUOLO")
 
   }
+  df$OC_SINTESI_PROGETTO[df$OC_SINTESI_PROGETTO == " "] <- df$OC_TITOLO_PROGETTO[which(df$OC_SINTESI_PROGETTO == " ")]
   df <- df[,-c(3,5:45,52:54,73,75:100,102:113,115,117,119,121,123,125,127,129:137,139,141,143,145:199)]
 
   colnames(df)[1:41] <- c("LocalProjectCode", "CUP", "Intervention","COD_REGION", "DEN_REGION","COD_PROVINCE","DEN_PROVINCE","COD_MUNICIPALITY","DEN_MUNICIPALITY", "EuFunding", "FESR_EuFunding","FSE_EuFunding", "FEASR_EuFunding", "FEAMP_EuFunding", "IOG_EuFunding", "FondoDiRotazioneITA", "FSC_FundingITA", "PAC_FundingITA","CompletamentiFunding_ITA", "OtherMeasuresFundingITA", "RegionFunding", "ProvinceFunding", "MunicipalityFunding", "ReleasedResources", "OtherPublicFunding", "ForeignStateFunding","PrivateFunding", "TotalPublicFunding", "TotalFunding", "FeasibilityStudyStartingDate", "FeasibilityStudyEndingDate", "PreliminaryDesignStartingDate", "PreliminaryDesignEndingDate", "DefinitiveDesignStartingDate", "DefinitiveDesignEndingDate", "ExecutiveDesignStartingDate", "ExecutiveDesignEndingDate", "WorksExecutionStartingDate", "WorksExecutionEndingDate", "ConclusionStartingDate", "ConclusionEndingDate")
+  if(length(df) == 44){
+  df <- df %>% dplyr::select(1:37, 43:44, dplyr::everything()) %>% dplyr::mutate(dplyr::across(30:43, ~lubridate::ymd(.)))  %>% dplyr::mutate(dplyr::across(30:43 , ~as.character(.)))
+  }else{
+  df <- df %>% dplyr::select(1:37, 42:43, dplyr::everything()) %>% dplyr::mutate(dplyr::across(30:43, ~lubridate::ymd(.)))  %>% dplyr::mutate(dplyr::across(30:43 , ~as.character(.)))
+  }
+
   return(df)
 }

@@ -9,7 +9,7 @@ Dataset collecting data about soil defense public works in the Basilicata region
 }
 \usage{data("RENDISpoint")}
 \format{
-  A data frame with 210 observations on the following 25 variables.
+  A data frame with 210 observations on the following 27 variables.
   \describe{
     \item{\code{CUP}}{a character vector}
     \item{\code{Intervention}}{a character vector}
@@ -29,6 +29,8 @@ Dataset collecting data about soil defense public works in the Basilicata region
     \item{\code{DefinitiveDesignEndingDate}}{a character vector}
     \item{\code{ExecutiveDesignStartingDate}}{a character vector}
     \item{\code{ExecutiveDesignEndingDate}}{a character vector}
+    \item{\code{EffectiveDesignStartingDate}}{a character vector}
+    \item{\code{EffectiveDesignEndingDate}}{a character vector}
     \item{\code{WorksExecutionStartingDate}}{a character vector}
     \item{\code{WorksExecutionEndingDate}}{a character vector}
     \item{\code{ConclusionStartingDate}}{a character vector}

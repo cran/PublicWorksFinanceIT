@@ -13,8 +13,8 @@
 #'
 #' @examples
 #' #Retrieve data with the polygons of the municipalities
-#' RENDISarea <- get_data_RENDIS("12", geo_ref = "A")
-#' plot_funds_map(RENDISarea, var = "Finance")
+#' \donttest{RENDISarea <- get_data_RENDIS("12", geo_ref = "A")
+#' plot_funds_map(RENDISarea, var = "Finance")}
 #'
 #' #Plotting the map for Lazio region to visualize the total public
 #' #expenditure divided by municipality.
@@ -33,19 +33,21 @@ plot_funds_map <- function(data, var) {
   dati <- data %>%
     dplyr::filter(!rlang::is_empty(.data$geom))
   #Log scale
-  dati$log_tot <- log(dati$tot)
+  #dati$log_tot <- log(dati$tot)
   dati$geom <- do.call(sf::st_sfc, dati$geom)
   dati$geom <- sf::st_cast(dati$geom, "MULTIPOLYGON")
   dati <- as.data.frame(dati)
   suppressWarnings(
 
     p <- ggplot2::ggplot(data = dati) +
-      ggplot2::geom_sf( ggplot2::aes(geometry = .data$geom, fill = .data$log_tot, text = gsub("\n", " ", paste("Municipality: ", .data$den,  "\n Tot:",.data$tot, "Euro")))) +
-      ggplot2::scale_fill_viridis_c() +
-      ggplot2::labs(fill = "Total funds", title = "Total Funds (log-scale)")+
+      ggplot2::geom_sf( ggplot2::aes(geometry = .data$geom, fill = .data$tot, text = gsub("\n", " ", paste("Municipality: ", .data$den,  "\n Tot:",.data$tot, "Euro")))) +
+      ggplot2::scale_fill_viridis_c(trans = "log") +
+      ggplot2::labs(fill = "Total funds (Euro)", title = "Total Funds (log-scale)")+
       ggplot2::theme_bw()
   )
-  print(p)
+
+  suppressWarnings(print(p))
+
 
 }
 

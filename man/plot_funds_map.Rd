@@ -20,8 +20,8 @@ The \code{plot_funds_map} function is designed for visualizing areal data within
 }
 \examples{
 #Retrieve data with the polygons of the municipalities
-RENDISarea <- get_data_RENDIS("12", geo_ref = "A")
-plot_funds_map(RENDISarea, var = "Finance")
+\donttest{RENDISarea <- get_data_RENDIS("12", geo_ref = "A")
+plot_funds_map(RENDISarea, var = "Finance")}
 
 #Plotting the map for Lazio region to visualize the total public
 #expenditure divided by municipality.

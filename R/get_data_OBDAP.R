@@ -227,6 +227,6 @@ get_data_OBDAP <- function(cod_reg, cod_prov = NULL, cod_mun= NULL, start = NULL
   }
   # Return the dataset
   df <- df[, -c(4:23,26:27,30:31,34,36:41,47:48)]
-  colnames(df)[c(1:21)] <- c("LocalProjectCode", "CUP", "Intervention", "ExecutiveDesignStartingDate", "ExecutiveDesignEndingDate", "WorksExecutionStartingDate", "WorksExecutionEndingDate", "ConclusionStartingDate", "ConclusionEndingDate", "Operability", "StateFunding", "EuFunding", "LocalAuthoritiesFunding", "PrivateFunding", "OtherFunding", "COD_MUNICIPALITY", "COD_PROVINCE","COD_REGION", "DEN_MUNICIPALITY","DEN_PROVINCE","DEN_REGION")
+  colnames(df)[c(1:21)] <- c("LocalProjectCode", "CUP", "Intervention", "EffectiveDesignStartingDate", "EffectiveDesignEndingDate", "WorksExecutionStartingDate", "WorksExecutionEndingDate", "ConclusionStartingDate", "ConclusionEndingDate", "Operability", "StateFunding", "EuFunding", "LocalAuthoritiesFunding", "PrivateFunding", "OtherFunding", "COD_MUNICIPALITY", "COD_PROVINCE","COD_REGION", "DEN_MUNICIPALITY","DEN_PROVINCE","DEN_REGION")
   return(df)
 }

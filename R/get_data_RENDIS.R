@@ -59,6 +59,7 @@
 #'@examples
 #'data_12 <- get_data_RENDIS("12", cod_prov = c("258", "059"), geo_ref = "C")
 #' #Data for the Lazio region filtering for Rome and Latina provinces with point georeferences.
+#' @encoding UTF-8
 #'
 #' @export
 get_data_RENDIS <- function(cod_reg, cod_prov = NULL, cod_mun = NULL, start = NULL, end = NULL,  type = NULL, geo_ref = NULL) {
@@ -130,8 +131,8 @@ get_data_RENDIS <- function(cod_reg, cod_prov = NULL, cod_mun = NULL, start = NU
       if (!is.null(cod_reg)) paste0("FILTER (str(?reg_istat) = '", current_cod_reg, "') "),
       if (!is.null(type)) paste0("FILTER (str(?type) = '", type, "') "),
       #if(!is.null(start) && !is.null(end)) paste0("FILTER(str(?date) >= '", start, "' && (str(?date) <= '", end, "')"),
-      if( !is.null(end)) paste0("FILTER (str(?date) <= '", end, "') "),
-      if(!is.null(start)) paste0("FILTER (str(?date) >= '", start, "') "),
+      #if( !is.null(end)) paste0("FILTER (str(?date) <= '", end, "') "),
+      #if(!is.null(start)) paste0("FILTER (str(?date) >= '", start, "') "),
 
       '} ',
       'ORDER BY ?reg ?cup ?code'
@@ -174,6 +175,9 @@ get_data_RENDIS <- function(cod_reg, cod_prov = NULL, cod_mun = NULL, start = NU
     )
 
     df <- rbind(df, current_df_interventions)
+    if(anyDuplicated(df$CUP)){
+      df <- df[!duplicated(df$CUP),]
+    }
 
     # Define the SPARQL query with parameters for georeferenced data
     sparql_query_geo <- paste0(
@@ -279,20 +283,39 @@ get_data_RENDIS <- function(cod_reg, cod_prov = NULL, cod_mun = NULL, start = NU
 
   }
 
+  #Handling Dates
+  # df <- df %>% dplyr::rowwise() %>%
+  #   dplyr::mutate(EffectiveDesignStartingDate = ifelse(all(is.na(df[,c(11,13,15,17)])), NA, pmin(df[11,13,15,17], na.rm = TRUE))) %>%
+  #   dplyr::mutate(EffectiveDesignEndingDate = ifelse(all(is.na(df[,c(12,14,16,18)])), NA, pmax(df[12,14,16,18], na.rm = TRUE))) %>% dplyr::ungroup() %>% as.data.frame()
+ colnames(df)[11:12] <- c("(BDAP - inizio Studio di fattibilita)", "(BDAP - Fine Studio di fattibilita)")
+ df <- df %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate(EffectiveDesignStartingDate = ifelse(all(is.na(c(.data$`(BDAP - inizio Studio di fattibilita)`, .data$`(BDAP - inizio Progettazione Preliminare)`, .data$`(BDAP - Inizio progettazione definitiva)`, .data$`(BDAP - Inizio progettazione esecutiva)`))), NA, pmin(.data$`(BDAP - inizio Studio di fattibilita)`, .data$`(BDAP - inizio Progettazione Preliminare)`, .data$`(BDAP - Inizio progettazione definitiva)`, .data$`(BDAP - Inizio progettazione esecutiva)`, na.rm = TRUE))) %>%
+    dplyr::mutate(EffectiveDesignEndingDate = ifelse(all(is.na(c(.data$`(BDAP - Fine Studio di fattibilita)`,.data$`(BDAP - Fine Progettazione Preliminare)`, .data$`(BDAP - fine progettazione definitiva)`, .data$`(BDAP - fine progettazione esecutiva)`))), NA, pmax(.data$`(BDAP - Fine Studio di fattibilita)`,.data$`(BDAP - Fine Progettazione Preliminare)`, .data$`(BDAP - fine progettazione definitiva)`, .data$`(BDAP - fine progettazione esecutiva)`, na.rm = TRUE))) %>% dplyr::ungroup() %>% as.data.frame()
+
+
   if(!is.null(start)){
-    df <- df %>% dplyr::filter(.data$`(BDAP - Inizio progettazione definitiva)` >= start)
+    df <- df %>%
+      dplyr::filter(.data$EffectiveDesignStartingDate >= start)
 
   }
 
   if(!is.null(end)){
-    df <- df %>% dplyr::filter(.data$`(BDAP - fine progettazione definitiva)` <= end)
-
+    df <- df %>%
+      dplyr::filter(.data$EffectiveDesignEndingDate <= end)
   }
 colnames(df)[5:8] <- c("DEN_MUNICIPALITY", "DEN_REGION", "COD_REGION", "COD_MUNICIPALITY")
 
-   if(length(df) == 25){
+   if(length(df) == 27){
  colnames(df)[11:24] <- c( "FeasibilityStudyStartingDate", "FeasibilityStudyEndingDate", "PreliminaryDesignStartingDate", "PreliminaryDesignEndingDate", "DefinitiveDesignStartingDate", "DefinitiveDesignEndingDate", "ExecutiveDesignStartingDate", "ExecutiveDesignEndingDate", "WorksExecutionStartingDate", "WorksExecutionEndingDate", "ConclusionStartingDate", "ConclusionEndingDate", "InterventionClosed", "Operability")
-    }
-  else(colnames(df)[11:23] <- c( "FeasibilityStudyStartingDate", "FeasibilityStudyEndingDate", "PreliminaryDesignStartingDate", "PreliminaryDesignEndingDate", "DefinitiveDesignStartingDate", "DefinitiveDesignEndingDate", "ExecutiveDesignStartingDate", "ExecutiveDesignEndingDate", "WorksExecutionStartingDate", "WorksExecutionEndingDate", "ConclusionStartingDate", "ConclusionEndingDate", "InterventionClosed"))
+
+ df <- df %>% dplyr::select(1:4,7,6,9,10,8,5,11:18, 26:27, dplyr::everything())
+    } else{
+
+    colnames(df)[11:23] <- c( "FeasibilityStudyStartingDate", "FeasibilityStudyEndingDate", "PreliminaryDesignStartingDate", "PreliminaryDesignEndingDate", "DefinitiveDesignStartingDate", "DefinitiveDesignEndingDate", "ExecutiveDesignStartingDate", "ExecutiveDesignEndingDate", "WorksExecutionStartingDate", "WorksExecutionEndingDate", "ConclusionStartingDate", "ConclusionEndingDate", "InterventionClosed")
+
+    df <- df %>% dplyr::select(1:4, 7,6,9,10, 8,5,11:18, 25:26, dplyr::everything())
+}
+
   return(df)
 }

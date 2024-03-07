@@ -101,7 +101,7 @@ Legislative process main steps:
 The \code{get_data_theme_OC} function allows users to fetch data from the OpenCoesione database based on specific themes related to projects.
 }
 \examples{
-data <- get_data_theme_OC("AMBIENTE", start = "2022-01-01", end = "2022-12-31")
+\donttest{data <- get_data_theme_OC("AMBIENTE", start = "2022-01-01", end = "2022-12-31")}
 
 }
 \references{
