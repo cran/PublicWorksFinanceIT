@@ -1,7 +1,7 @@
 Package: PublicWorksFinanceIT
 Title: Soil Defense Investments in Italy: Data Retrieval, Analysis,
         Visualization
-Version: 0.2.0
+Version: 0.3.0
 Authors@R: c(person(given = "Lorena",
            family = "Ricciotti", 
            role = c("aut", "cre"),
@@ -27,14 +27,13 @@ Language: EN
 LazyData: true
 LazyDataCompression: xz
 Imports: magrittr, dplyr, ggplot2, httr,leaflet,lubridate, rlang,
-        rvest, scales, sf, tibble, tidyr
+        rvest, scales, sf, tibble, tidyr, plotly, spdep, knitr
 RoxygenNote: 7.3.0
 License: GPL (>= 3)
 Author: Lorena Ricciotti [aut, cre] (<https://orcid.org/0009-0005-7774-3181>),
   Alessio Pollice [ths] (<https://orcid.org/0000-0002-2818-9373>)
 Maintainer: Lorena Ricciotti <lorena.ricciotti@uniba.it>
 NeedsCompilation: no
-Packaged: 2024-03-07 10:14:44 UTC; lori1
-Depends: R (>= 2.10)
+Packaged: 2024-10-28 11:05:00 UTC; lori1
 Repository: CRAN
-Date/Publication: 2024-03-07 10:30:06 UTC
+Date/Publication: 2024-10-29 23:10:10 UTC

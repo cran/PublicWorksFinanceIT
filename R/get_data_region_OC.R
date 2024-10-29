@@ -112,6 +112,7 @@ get_data_region_OC <- function(cod_reg, cod_prov = NULL, cod_mun = NULL,  start 
 
     unlink(dest_file)
     unlink(paste0("dati_", cod, ".csv"))
+    unlink(temp_dir)
 
     df <- rbind(dati, df)
   }
@@ -152,7 +153,7 @@ get_data_region_OC <- function(cod_reg, cod_prov = NULL, cod_mun = NULL,  start 
     for(cod in cod_reg_num){
       #Define the query
       sparql <- paste0("
-    select distinct str(?registat) AS ?reg_istat str(?istat) AS ?com_istat ?name ?geometry where {
+    select distinct str(?registat) AS ?reg_istat str(?istat) AS ?COD_COMUNE ?name ?geometry where {
       ?s a <https://w3id.org/italia/env/onto/place/Municipality>;
       <https://w3id.org/italia/env/onto/place/istat> ?istat;
       <https://w3id.org/italia/env/onto/place/hasRegion> ?reguri;
@@ -206,10 +207,12 @@ get_data_region_OC <- function(cod_reg, cod_prov = NULL, cod_mun = NULL,  start 
       colnames(loc) <- head_vars
       geo <- rbind(loc, geo)
     }
-
-
-    df$geom <- ifelse(df$COD_COM %in% geo$com_istat ,
-                      geo$geometry[match(df$COD_COM, geo$com_istat)],NA)
+    df <- df %>% dplyr::left_join(geo %>% dplyr::select(.data$COD_COMUNE, .data$geometry),
+                                  by = "COD_COMUNE", relationship = "many-to-many") %>%
+      dplyr::mutate(geom = .data$geometry) %>%
+      dplyr::select(-.data$geometry)
+    # df$geom <- ifelse(df$COD_COM %in% geo$com_istat ,
+    #                   geo$geometry[match(df$COD_COM, geo$com_istat)],NA)
 
     df <- df[!is.na(df$geom),]
 
@@ -270,13 +273,27 @@ get_data_region_OC <- function(cod_reg, cod_prov = NULL, cod_mun = NULL,  start 
 
   }
   df$OC_SINTESI_PROGETTO[df$OC_SINTESI_PROGETTO == " "] <- df$OC_TITOLO_PROGETTO[which(df$OC_SINTESI_PROGETTO == " ")]
-  df <- df[,-c(3,5:45,52:54,73,75:100,102:113,115,117,119,121,123,125,127,129:137,139,141,143,145:199)]
+  df <- df[,-c(3,5:45,52:54,73,75:113,115,117,119,121,123,125,127,129:137,139,141,143,145:199)]
 
-  colnames(df)[1:41] <- c("LocalProjectCode", "CUP", "Intervention","COD_REGION", "DEN_REGION","COD_PROVINCE","DEN_PROVINCE","COD_MUNICIPALITY","DEN_MUNICIPALITY", "EuFunding", "FESR_EuFunding","FSE_EuFunding", "FEASR_EuFunding", "FEAMP_EuFunding", "IOG_EuFunding", "FondoDiRotazioneITA", "FSC_FundingITA", "PAC_FundingITA","CompletamentiFunding_ITA", "OtherMeasuresFundingITA", "RegionFunding", "ProvinceFunding", "MunicipalityFunding", "ReleasedResources", "OtherPublicFunding", "ForeignStateFunding","PrivateFunding", "TotalPublicFunding", "TotalFunding", "FeasibilityStudyStartingDate", "FeasibilityStudyEndingDate", "PreliminaryDesignStartingDate", "PreliminaryDesignEndingDate", "DefinitiveDesignStartingDate", "DefinitiveDesignEndingDate", "ExecutiveDesignStartingDate", "ExecutiveDesignEndingDate", "WorksExecutionStartingDate", "WorksExecutionEndingDate", "ConclusionStartingDate", "ConclusionEndingDate")
+  colnames(df)[1:40] <- c("LocalProjectCode", "CUP", "Intervention","COD_REGION", "DEN_REGION","COD_PROVINCE","DEN_PROVINCE",
+                          "COD_MUNICIPALITY","DEN_MUNICIPALITY", "EuFunding", "FESR_EuFunding","FSE_EuFunding",
+                          "FEASR_EuFunding", "FEAMP_EuFunding", "IOG_EuFunding", "FondoDiRotazioneITA", "FSC_FundingITA",
+                          "PAC_FundingITA","CompletamentiFunding_ITA", "OtherMeasuresFundingITA", "RegionFunding",
+                          "ProvinceFunding", "MunicipalityFunding", "ReleasedResources", "OtherPublicFunding",
+                          "ForeignStateFunding","PrivateFunding", "TotalPublicFunding",
+                          "FeasibilityStudyStartingDate", "FeasibilityStudyEndingDate", "PreliminaryDesignStartingDate",
+                          "PreliminaryDesignEndingDate", "DefinitiveDesignStartingDate", "DefinitiveDesignEndingDate",
+                          "ExecutiveDesignStartingDate", "ExecutiveDesignEndingDate", "WorksExecutionStartingDate",
+                          "WorksExecutionEndingDate", "ConclusionStartingDate", "ConclusionEndingDate")
+
   if(length(df) == 44){
-  df <- df %>% dplyr::select(1:37, 43:44, dplyr::everything()) %>% dplyr::mutate(dplyr::across(30:43, ~lubridate::ymd(.)))  %>% dplyr::mutate(dplyr::across(30:43 , ~as.character(.)))
-  }else{
-  df <- df %>% dplyr::select(1:37, 42:43, dplyr::everything()) %>% dplyr::mutate(dplyr::across(30:43, ~lubridate::ymd(.)))  %>% dplyr::mutate(dplyr::across(30:43 , ~as.character(.)))
+  df <- df %>% dplyr::select(1:36, 43:44, dplyr::everything()) %>% dplyr::mutate(dplyr::across(29:43, ~lubridate::ymd(.)))  %>% dplyr::mutate(dplyr::across(29:43 , ~as.character(.)))
+  }
+    if(length(df) == 42){
+      df <- df %>% dplyr::mutate(dplyr::across(29:42, ~lubridate::ymd(.)))  %>% dplyr::mutate(dplyr::across(29:42 , ~as.character(.)))
+    }
+  if(length(df) == 43){
+    df <- df %>% dplyr::select(1:36, 42:43, dplyr::everything()) %>% dplyr::mutate(dplyr::across(29:42, ~lubridate::ymd(.)))  %>% dplyr::mutate(dplyr::across(29:42 , ~as.character(.)))
   }
 
   return(df)

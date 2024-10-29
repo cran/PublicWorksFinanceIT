@@ -70,7 +70,7 @@ get_data_RENDIS <- function(cod_reg, cod_prov = NULL, cod_mun = NULL, start = NU
   loc <- data.frame()
 
   for (current_cod_reg in cod_reg) {
-    # Define your SPARQL query with parameters for interventions
+    # Define SPARQL query with parameters for interventions
     sparql_query <- paste0(
       'SELECT DISTINCT (str(?cup) AS ?CUP) (str(?int) AS ?Intervention) (str(?type) AS ?Type) (str(?imp) AS ?Finance) (str(?com) AS ?DEN_COMUNE) str(?reg) AS ?DEN_REGIONE str(?reg_istat) AS ?COD_REGIONE (str(?codist) AS ?com_istat) (str(?prov) AS ?DEN_PROVINCE)
 (str(?cod_prov) AS ?COD_PROVINCE) (str(?code) AS ?COD_phase) (str(?phase) AS ?DEN_phase)  (str(?name) AS ?BDAP_phase) (str(?date) AS ?Date)
@@ -245,8 +245,9 @@ get_data_RENDIS <- function(cod_reg, cod_prov = NULL, cod_mun = NULL, start = NU
   }
 
   # Assign geometries
-  df$geom <- ifelse(df$com_istat %in% loc$com_istat,
-                    loc$geometry[match(df$com_istat, loc$com_istat)], NA)
+   df <- df %>% dplyr::left_join(loc %>% dplyr::select(.data$com_istat, .data$geometry), by = "com_istat") %>%
+     dplyr::mutate(geom = .data$geometry) %>%
+     dplyr::select(-.data$geometry)
 
   df <- df[!is.na(df$geom), ]
 
@@ -314,7 +315,7 @@ colnames(df)[5:8] <- c("DEN_MUNICIPALITY", "DEN_REGION", "COD_REGION", "COD_MUNI
 
     colnames(df)[11:23] <- c( "FeasibilityStudyStartingDate", "FeasibilityStudyEndingDate", "PreliminaryDesignStartingDate", "PreliminaryDesignEndingDate", "DefinitiveDesignStartingDate", "DefinitiveDesignEndingDate", "ExecutiveDesignStartingDate", "ExecutiveDesignEndingDate", "WorksExecutionStartingDate", "WorksExecutionEndingDate", "ConclusionStartingDate", "ConclusionEndingDate", "InterventionClosed")
 
-    df <- df %>% dplyr::select(1:4, 7,6,9,10, 8,5,11:18, 25:26, dplyr::everything())
+    df <- df %>% dplyr::mutate(Operability = NA) %>% dplyr::select(1:4, 7,6,9,10, 8,5,11:18, 25:26,27, dplyr::everything())
 }
 
   return(df)

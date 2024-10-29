@@ -77,10 +77,16 @@ merge_data <- function(data_RENDIS, data_OBDAP, data_OC) {
 
   data_OBDAP <- data_OBDAP %>%
     dplyr::mutate(Finance = rowSums(data_OBDAP[, 11:15], na.rm = T)) %>%
-    dplyr::mutate(Source = "OpenBDAP", 'FeasibilityStudyStartingDate' = NA, 'FeasibilityStudyEndingDate' = NA, 'PreliminaryDesignStartingDate' = NA, 'PreliminaryDesignEndingDate' = NA, 'DefinitiveDesignStartingDate' = NA,  "DefinitiveDesignEndingDate" = NA, 'ExecutiveDesignStartingDate' = NA,  "ExecutiveDesignEndingDate" = NA,'InterventionClosed' =NA)
+    dplyr::mutate(Source = "OpenBDAP", 'FeasibilityStudyStartingDate' = NA,
+                  'FeasibilityStudyEndingDate' = NA, 'PreliminaryDesignStartingDate' = NA,
+                  'PreliminaryDesignEndingDate' = NA, 'DefinitiveDesignStartingDate' = NA,
+                  "DefinitiveDesignEndingDate" = NA, 'ExecutiveDesignStartingDate' = NA,
+                  "ExecutiveDesignEndingDate" = NA,'InterventionClosed' =NA)
 
 
-  data_OC <- data_OC %>% dplyr::mutate('StateFunding' = rowSums(data_OC[,16:20], na.rm = T),  'LocalAuthoritiesFunding' = rowSums(data_OC[,21:23], na.rm=T), 'OtherFunding' = rowSums(data_OC[,24:26], na.rm =T))
+  data_OC <- data_OC %>% dplyr::mutate('StateFunding' = rowSums(data_OC[,16:20], na.rm = T),
+                                       'LocalAuthoritiesFunding' = rowSums(data_OC[,21:23], na.rm=T),
+                                       'OtherFunding' = rowSums(data_OC[,24:26], na.rm =T))
   data_OC <- data_OC %>%
     dplyr::rename(Finance = "TotalPublicFunding") %>%
     dplyr::mutate(Source = "OpenCoesione") %>%
@@ -91,6 +97,7 @@ merge_data <- function(data_RENDIS, data_OBDAP, data_OC) {
   #data_OC <- data_OC %>% dplyr::mutate(dplyr::across(c(8:21), as.character))
   data_OBDAP <- data_OBDAP %>% dplyr::select(colnames(data_RENDIS), colnames(data_OBDAP[11:15]))
   #data_OC$Finance <- as.numeric(data_OC$Finance)
+  data_OBDAP$COD_REGION <- as.character(data_OBDAP$COD_REGION)
 
   # Merge
   merged_data <- dplyr::bind_rows(data_OC, data_OBDAP, data_RENDIS)

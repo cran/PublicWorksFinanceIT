@@ -65,11 +65,12 @@ get_data_OBDAP <- function(cod_reg, cod_prov = NULL, cod_mun= NULL, start = NULL
   }
 
   df <- data.frame()
+  temp_dir <- tempdir()
+  if (!dir.exists(temp_dir)) {
+    dir.create(temp_dir, recursive = TRUE)
+  }
   for (cod in cod_reg) {
-    temp_dir <- tempdir()
-    if (!dir.exists(temp_dir)) {
-      dir.create(temp_dir, recursive = TRUE)
-    }
+
     url <- paste0("https://bdap-opendata.rgs.mef.gov.it/SpodCkanApi/api/1/rest/dataset/spd_mop_prg_mon_reg",
                   cod, "_01_9999.csv")
 
@@ -77,29 +78,36 @@ get_data_OBDAP <- function(cod_reg, cod_prov = NULL, cod_mun= NULL, start = NULL
 
     utils::download.file(url, nome_file, mode = "wb", quiet =T)
     if(verbose == TRUE){
-    cat(paste("Downloaded:", nome_file, "\n"))}
+    cat(paste("Downloaded:", nome_file, "\n"))
+      }
     dataset <- utils::read.csv(nome_file, sep = ";", dec = ".", check.names = F, fileEncoding = "latin1")
     dataset <- dataset[,-49]
-    unlink(temp_dir, recursive = TRUE)
-
 
     #Get georeferenced data
-    geo_OBDAP <- PublicWorksFinanceIT::geo_OBDAP
-    dataset$COD_COMUNE <- ifelse(dataset$`Codice CUP` %in% geo_OBDAP$CUP ,geo_OBDAP$COD_MUNICIPALITY[match(dataset$`Codice CUP`, geo_OBDAP$CUP)],NA)
+    #geo_OBDAP <- PublicWorksFinanceIT::geo_OBDAP
+    url <- "https://bdap-opendata.rgs.mef.gov.it/SpodCkanApi/api/1/rest/dataset/spd_mop_loc_mon_local_01_9999.csv"
+    nome_file <- file.path(temp_dir, "loc.csv")
+    utils::download.file(url, nome_file, mode = "wb", quiet =T, timeout = 90)
+    geo_OBDAP <- utils::read.csv(nome_file, sep = ";")
 
-    dataset$COD_PROVINCIA <- ifelse(dataset$`Codice CUP` %in% geo_OBDAP$CUP ,geo_OBDAP$COD_PROVINCE[match(dataset$`Codice CUP`, geo_OBDAP$CUP)],NA)
-
-    dataset$COD_REGIONE <- ifelse(dataset$`Codice CUP` %in% geo_OBDAP$CUP, geo_OBDAP$COD_REGION[match(dataset$`Codice CUP`, geo_OBDAP$CUP)],NA)
-
-    dataset$DEN_COMUNE <- ifelse(dataset$`Codice CUP` %in% geo_OBDAP$CUP, geo_OBDAP$DEN_MUNICIPALITY[match(dataset$`Codice CUP`, geo_OBDAP$CUP)],NA)
-
-    dataset$DEN_PROVINCIA <- ifelse(dataset$`Codice CUP` %in% geo_OBDAP$CUP, geo_OBDAP$DEN_PROVINCE[match(dataset$`Codice CUP`, geo_OBDAP$CUP)],NA)
-
-    dataset$DEN_REGIONE <- ifelse(dataset$`Codice CUP` %in% geo_OBDAP$CUP, geo_OBDAP$DEN_REGION[match(dataset$`Codice CUP`, geo_OBDAP$CUP)],NA)
-
-    dataset$COD_COMUNE <- paste0(0,dataset$COD_PROVINCIA,0,dataset$COD_COMUNE)
+    # Join data localization
+    names(dataset)[2] <- "Codice.CUP"
+    dataset <- dataset %>%
+      dplyr::left_join(geo_OBDAP %>% dplyr::select(.data$Codice.CUP, .data$Codice.Regione, .data$Descrizione.Regione,
+                                                   .data$Codice.Provincia, .data$Descrizione.Provincia, .data$Codice.Comune,
+                                                   .data$Descrizione.Comune),
+                       by = "Codice.CUP", relationship = "many-to-many") %>%
+      dplyr::mutate(DEN_REGIONE = .data$Descrizione.Regione, COD_REGIONE = .data$Codice.Regione,
+                    DEN_PROVINCIA = .data$Descrizione.Provincia, COD_PROVINCIA = .data$Codice.Provincia,
+                    DEN_COMUNE = .data$Descrizione.Comune, COD_COMUNE = .data$Codice.Comune) %>%
+      dplyr::select(-c(.data$Codice.Regione, .data$Descrizione.Regione, .data$Codice.Provincia, .data$Descrizione.Provincia,
+                       .data$Codice.Comune, .data$Descrizione.Comune)) %>%
+      dplyr::mutate(COD_COMUNE =
+               dplyr::case_when(nchar(.data$COD_COMUNE) == 1  ~ paste0("0", .data$COD_PROVINCIA, "00", .data$COD_COMUNE),
+                         nchar(.data$COD_COMUNE) == 2 ~ paste0("0",.data$COD_PROVINCIA, "0",.data$COD_COMUNE)))
 
     df <- rbind(dataset, df)
+    unlink(temp_dir, recursive = TRUE)
 
   }
 
@@ -114,7 +122,7 @@ get_data_OBDAP <- function(cod_reg, cod_prov = NULL, cod_mun= NULL, start = NULL
     for(cod in cod_reg){
       #Define the query
       sparql <- paste0("
-    select distinct str(?registat) AS ?reg_istat str(?istat) AS ?com_istat ?name ?geometry where {
+    select distinct str(?registat) AS ?reg_istat str(?istat) AS ?COD_COMUNE ?name ?geometry where {
       ?s a <https://w3id.org/italia/env/onto/place/Municipality>;
       <https://w3id.org/italia/env/onto/place/istat> ?istat;
       <https://w3id.org/italia/env/onto/place/hasRegion> ?reguri;
@@ -170,8 +178,15 @@ get_data_OBDAP <- function(cod_reg, cod_prov = NULL, cod_mun= NULL, start = NULL
       #dataset$PRO_COM <- paste0("0",dataset$COD_PROVINCIA,"0",dataset$COD_COMUNE)
       geo <- rbind(loc,geo)
     }
-    df$geom <- ifelse(df$COD_COMUNE %in% geo$com_istat ,
-                      geo$geometry[match(df$COD_COMUNE, geo$com_istat)],NA)
+
+    df$COD_COMUNE <- as.numeric(df$COD_COMUNE)
+    geo$COD_COMUNE <- as.numeric(geo$COD_COMUNE)
+
+    df <- df %>% dplyr::left_join(geo %>% dplyr::select(.data$COD_COMUNE,.data$geometry),
+                                  by = "COD_COMUNE") %>%
+      dplyr::mutate(geom = .data$geometry) %>% dplyr::select(-.data$geometry)
+    # df$geom <- ifelse(df$COD_COMUNE %in% geo$com_istat ,
+    # geo$geometry[match(df$COD_COMUNE, geo$com_istat)],NA)
 
     df <- df[!is.na(df$geom),]
 
@@ -227,6 +242,7 @@ get_data_OBDAP <- function(cod_reg, cod_prov = NULL, cod_mun= NULL, start = NULL
   }
   # Return the dataset
   df <- df[, -c(4:23,26:27,30:31,34,36:41,47:48)]
-  colnames(df)[c(1:21)] <- c("LocalProjectCode", "CUP", "Intervention", "EffectiveDesignStartingDate", "EffectiveDesignEndingDate", "WorksExecutionStartingDate", "WorksExecutionEndingDate", "ConclusionStartingDate", "ConclusionEndingDate", "Operability", "StateFunding", "EuFunding", "LocalAuthoritiesFunding", "PrivateFunding", "OtherFunding", "COD_MUNICIPALITY", "COD_PROVINCE","COD_REGION", "DEN_MUNICIPALITY","DEN_PROVINCE","DEN_REGION")
+  colnames(df)[c(1:21)] <- c("LocalProjectCode", "CUP", "Intervention", "EffectiveDesignStartingDate",
+                             "EffectiveDesignEndingDate", "WorksExecutionStartingDate", "WorksExecutionEndingDate", "ConclusionStartingDate", "ConclusionEndingDate", "Operability", "StateFunding", "EuFunding", "LocalAuthoritiesFunding", "PrivateFunding", "OtherFunding","DEN_REGION","COD_REGION", "DEN_PROVINCE","COD_PROVINCE","DEN_MUNICIPALITY","COD_MUNICIPALITY")
   return(df)
 }
